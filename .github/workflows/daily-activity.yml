@@ -1,0 +1,42 @@
+name: Daily Activity Automation
+
+on:
+  schedule:
+    # Runs everyday at 12:00 PM UTC. Adjust the cron timing as you prefer.
+    - cron: '0 12 * * *'
+  workflow_dispatch: # Allows you to manually click "Run workflow" to test it instantly
+
+jobs:
+  make-commits:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.AUTO_COMMIT_TOKEN }}
+
+      - name: Generate Random Commits
+        run: |
+          # Configure Git Identity
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+          # Generate a random integer between 0 and 10 inclusive
+          NUM_COMMITS=$(( RANDOM % 11 ))
+          echo "Targeting $NUM_COMMITS commits for today."
+
+          # Create a dummy file if it doesn't exist
+          touch activity_log.txt
+
+          # Loop to execute the random number of individual commits
+          for ((i=1; i<=NUM_COMMITS; i++))
+          do
+             echo "Activity check-in on $(date) - commit $i" >> activity_log.txt
+             git add activity_log.txt
+             git commit -m "chore: automated activity update $i/10"
+          done
+
+      - name: Push Changes
+        run: |
+          git push origin main
